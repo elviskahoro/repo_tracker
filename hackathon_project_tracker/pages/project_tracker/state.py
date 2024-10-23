@@ -17,8 +17,6 @@ GITHUB_REPO_PATH_DEFAULT: str = helper_github.create_repo_path(
 
 class State(rx.State):
     """The state for the project tracker page."""
-
-    title: str = "Hackathon Project Tracker"
     current_repo_path: str = GITHUB_REPO_PATH_DEFAULT
 
     def on_load(
