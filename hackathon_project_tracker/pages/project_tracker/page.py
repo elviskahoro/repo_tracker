@@ -2,8 +2,6 @@ from typing import Callable
 
 import reflex as rx
 
-from .state import State
-
 
 def index(
     placeholder_function: Callable[[], None],
@@ -11,7 +9,7 @@ def index(
     return rx.vstack(
         rx.hstack(
             rx.heading(
-                State.title,
+                "Hackathon Project Tracker",
                 font_size="2em",
             ),
             rx.spacer(),
