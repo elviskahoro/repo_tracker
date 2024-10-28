@@ -12,6 +12,7 @@ TOKENS: dict[str, str] = {
     "GITHUB_CLIENT_SECRET": os.getenv("GITHUB_CLIENT_SECRET"),
     "OTEL_PROVIDER_TOKEN_NAME": os.getenv("OTEL_PROVIDER_TOKEN_NAME"),
     "OTEL_APP_NAME": os.getenv("OTEL_APP_NAME"),
+    "PERPLEXITY_API_KEY": os.getenv("PERPLEXITY_API_KEY"),
 }
 if TOKENS["OTEL_PROVIDER_TOKEN_NAME"] is not None:
     TOKENS.update(
