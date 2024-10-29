@@ -24,7 +24,7 @@ DEFAULT_REQUEST_TIMEOUT: int = 15
 DEFAULT_TIME_ZONE: str = "US/Pacific"
 
 
-class PydanticConfiguration:
+class PydanticConfiguration:  # trunk-ignore(ruff/D101)
     arbitrary_types_allowed = True
 
 
@@ -87,22 +87,24 @@ def get_input_file_paths_for_folder(
             error_msg,
         )
 
-    if file_extensions_to_filter is None:
-        log(
-            the_log="File extension is null; will not filter the filepaths under the passed in directories.",
-            severity=Severity.INFO,
-            file=__file__,
-        )
+    match file_extensions_to_filter:
+        case None:
+            log(
+                the_log="File extension is null; will not filter the filepaths under the passed in directories.",
+                severity=Severity.INFO,
+                file=__file__,
+            )
 
-    elif not isinstance(
-        file_extensions_to_filter,
-        list,
-    ):
-        log(
-            the_log=f"File extensions needs to be a list of extensions, type passed in {type(file_extensions_to_filter)}",
-            severity=Severity.WARNING,
-            file=__file__,
-        )
+        case list():
+            pass
+
+        case _:  # trunk-ignore(pyright/reportUnnecessaryComparison)
+            error_msg: str = f"File extensions needs to be a list of extensions, type passed in {type(file_extensions_to_filter)}"
+            log(
+                the_log=error_msg,
+                severity=Severity.WARNING,
+                file=__file__,
+            )
 
     def filter_strings_that_end_with(
         string_to_match: str,
@@ -189,10 +191,6 @@ def is_email_address(
 def load_file_then_dump_as_string(
     file_path: Path,
 ) -> str:
-    """Loads a file and returns it as a string based on a file name. By default starts at the OS's current working directory."""
-    if file_path is None:
-        raise AttributeError
-
     with file_path.open(
         mode="r+",
         encoding="UTF-8",
@@ -271,29 +269,25 @@ def validate_response_is_successful(
     def parse_based_on_type(
         response_type_to_parse_with: type[BaseModel],
     ) -> BaseModel:
-        response_parsed: BaseModel
         match json_data_or_obj:
 
             case str():
-                response_parsed = response_type_to_parse_with.model_validate_json(
+                return response_type_to_parse_with.model_validate_json(
                     json_data=json_data_or_obj,
                 )
 
             case dict():
-                response_parsed = response_type_to_parse_with.model_validate(
+                return response_type_to_parse_with.model_validate(
                     obj=json_data_or_obj,
                 )
 
-            case _:
-                error_msg: str = (
-                    f"Input Payload: Type: Could not be matched: {type(json_data_or_obj)}"
-                )
-                raise ValueError(
-                    error_msg,
-                    Severity.ERROR,
-                )
-
-        return response_parsed
+        error_msg: str = (
+            f"Input Payload: Type: Could not be matched: {type(json_data_or_obj)}"
+        )
+        raise ValueError(
+            error_msg,
+            Severity.ERROR,
+        )
 
     response_type: type[BaseModel]
     should_log_exception: bool
@@ -324,11 +318,8 @@ def validate_response_is_successful(
 
             continue
 
-        if response_parsed is None:
-            continue
-
         try:
-            response_parsed.validate_response()  # type: ignore
+            response_parsed.validate_response()
 
         except AttributeError:
             log(
@@ -426,5 +417,4 @@ class FileType(Enum):
                     ),
                 )
 
-            case _:
-                raise ValueError
+        raise ValueError

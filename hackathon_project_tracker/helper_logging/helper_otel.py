@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import os
-from collections import namedtuple
+from typing import NamedTuple
 
-OtelConfig = namedtuple("OtelConfig", ["headers","endpoint"])
+
+class OtelConfig(NamedTuple):
+
+    headers: str | None
+    endpoint: str | None
 
 
 def get_otel_config(
