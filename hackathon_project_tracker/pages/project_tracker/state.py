@@ -6,9 +6,9 @@ import reflex as rx
 from github import Github
 from sqlalchemy import select
 
-from hackathon_project_tracker import helper_github
 from hackathon_project_tracker.models.project import Project
 from hackathon_project_tracker.otel import tracer
+from hackathon_project_tracker.pages.project_tracker import helper_github
 from hackathon_project_tracker.tokens import TOKENS
 
 GITHUB_CLIENT: Github = helper_github.set_up_client_from_tokens(
