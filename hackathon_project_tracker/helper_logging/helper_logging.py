@@ -11,8 +11,6 @@ if TYPE_CHECKING:
 
 DEFAULT_FOLDER_PATH_LOGGING: Path = Path.cwd() / "out" / "logs"
 
-LOGGER: Logger | None = None
-
 
 class Severity(Enum):
     """The severity levels that are available to the user."""
@@ -52,7 +50,70 @@ class Severity(Enum):
                 raise ValueError
 
 
-def create_log_message(
+class LoggerManager:
+    """Manages the application's logging configuration."""
+
+    _instance: Logger | None = None
+
+    @classmethod
+    def get_logger(
+        cls: type[LoggerManager],
+    ) -> Logger:
+        """Returns the configured logger instance."""
+        if cls._instance is None:
+            cls._instance = cls._setup_logger()
+
+        return cls._instance
+
+    @classmethod
+    def _setup_logger(
+        cls: type[LoggerManager],
+        file_name: str | None = None,
+        severity_to_show: Severity = Severity.ALL,
+    ) -> Logger:
+        """Sets up the logger configuration."""
+        if file_name is not None:
+            logging.basicConfig(
+                filename=DEFAULT_FOLDER_PATH_LOGGING / file_name,
+                encoding="utf-8",
+                level=severity_to_show.get_logging_level(),
+                force=True,
+            )
+
+        else:
+            logging.basicConfig(
+                encoding="utf-8",
+                level=severity_to_show.get_logging_level(),
+                force=True,
+            )
+
+        return logging.getLogger()
+
+
+def setup_logger(
+    file_name: str | None,
+    logger: Logger | None,
+    severity_to_show: Severity = Severity.ALL,
+) -> Logger:
+    """Sets up the logger."""
+    if logger is not None and file_name is not None:
+        error_msg: str = "Cannot set logger and filename at the same time."
+        raise ValueError(
+            error_msg,
+        )
+
+    if logger is not None:
+        LoggerManager._instance = logger  # trunk-ignore(ruff/SLF001)
+        return logger
+
+    LoggerManager._instance = LoggerManager._setup_logger(  # trunk-ignore(ruff/SLF001)
+        file_name=file_name,
+        severity_to_show=severity_to_show,
+    )
+    return LoggerManager._instance  # trunk-ignore(ruff/SLF001)
+
+
+def _create_log_message(
     the_log: str,
     file: str | None,
 ) -> str:
@@ -66,31 +127,19 @@ def log(
     file: str,
 ) -> None:
     """Logs a message or dictionary and also prints it out to the console."""
-    global LOGGER
-    msg: str = create_log_message(
+    msg: str = _create_log_message(
         the_log=the_log,
         file=file,
     )
 
-    if LOGGER is None:
-        LOGGER = setup_logger(
-            file_name=None,
-            logger=None,
-            severity_to_show=severity,
-        )
+    logger = LoggerManager.get_logger()
 
-    if LOGGER is None:
-        error_msg: str = "Logger is null"
-        raise OSError(
-            error_msg,
-        )
-
-    LOGGER.log(
+    logger.log(
         msg=msg,
         level=severity.get_logging_level(),
     )
 
-    if severity.get_logging_level() >= LOGGER.level:
+    if severity.get_logging_level() >= logger.level:
         print(
             f"{severity.value} : {msg}",
         )
@@ -166,7 +215,7 @@ def log_with_exception(
     match the_log:
 
         case str():
-            msg: str = create_log_message(
+            msg: str = _create_log_message(
                 the_log=the_log,
                 file=file,
             )
@@ -189,42 +238,3 @@ def log_with_exception(
         severity=severity,
     )
     return custom_exception
-
-
-def setup_logger(
-    file_name: str | None,
-    logger: Logger | None,
-    severity_to_show: Severity = Severity.ALL,
-) -> Logger:
-    """Sets up the logger."""
-    if logger is not None and file_name is not None:
-        error_msg: str = "Cannot set logger and filename at the same time."
-        raise ValueError(
-            error_msg,
-        )
-
-    global LOGGER
-    if LOGGER is not None:
-        return LOGGER
-
-    if logger is not None:
-        LOGGER = logger
-        return LOGGER
-
-    if file_name is not None:
-        logging.basicConfig(
-            filename=DEFAULT_FOLDER_PATH_LOGGING / file_name,
-            encoding="utf-8",
-            level=severity_to_show.get_logging_level(),
-            force=True,
-        )
-
-    else:
-        logging.basicConfig(
-            encoding="utf-8",
-            level=severity_to_show.get_logging_level(),
-            force=True,
-        )
-
-    LOGGER = logging.getLogger()
-    return LOGGER
