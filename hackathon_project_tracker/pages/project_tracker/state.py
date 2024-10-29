@@ -29,8 +29,8 @@ class State(rx.State):
     ) -> None:
         with tracer.start_as_current_span("on_load"), rx.session() as session:
             self.projects = (
-                session.exec(  # trunk-ignore(pyright/reportCallIssue)
-                    statement=select(Project),  # trunk-ignore(pyright/reportArgumentType)
+                session.exec( # trunk-ignore(pyright/reportCallIssue)
+                    statement=select(Project), # trunk-ignore(pyright/reportArgumentType)
                 )
                 .scalars()
                 .all()
