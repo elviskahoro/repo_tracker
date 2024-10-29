@@ -8,6 +8,8 @@ from .pydantic_settings import BaseModel  # trunk-ignore(ruff/TCH001)
 
 
 class ResponseCode(Enum):
+    """Enumeration of response codes used in the application."""
+
     ACCEPTED_AND_SUCCESSFUL = 200
     ACCEPTED_WITH_NOTHING_TO_DO = 202
     FAILURE_WITH_RETRY = 429
@@ -15,6 +17,15 @@ class ResponseCode(Enum):
 
 
 class PydanticConfiguration:
+    """Configuration class for Pydantic model settings.
+
+    This class defines configuration options for Pydantic models used within the application.
+
+    Attributes:
+        arbitrary_types_allowed (bool): When True, allows Pydantic to work with arbitrary Python types
+            that it doesn't natively support. This is useful when working with custom classes
+            or third-party types that need to be included in Pydantic models.
+    """
     arbitrary_types_allowed = True
 
 
@@ -22,6 +33,8 @@ class PydanticConfiguration:
     config=PydanticConfiguration,
 )
 class ResponseStatus:
+    """Represents the status of a response, including the response code, response string, and an optional response dictionary."""
+
     response_string: str | None
     response_code: ResponseCode
     response_dict: BaseModel | None = None
@@ -29,6 +42,7 @@ class ResponseStatus:
     def __repr__(
         self: ResponseStatus,
     ) -> str:
+        """Returns a string representation of the ResponseStatus object."""
         return f"{self.response_code.value} : {self.response_code.name} : {self.response_string}"
 
     @classmethod

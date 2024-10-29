@@ -28,10 +28,10 @@ resource_attributes: dict[str, str] = {
     ResourceAttributes.SERVICE_NAME: get_config().app_name,
 }
 resource = Resource(
-    attributes=resource_attributes,
+    attributes=resource_attributes, # trunk-ignore(pyright/reportArgumentType)
 )
 
-traceProvider = TracerProvider(
+TRACE_PROVIDER = TracerProvider(
     resource=resource,
 )
 otel_config: OtelConfig = get_otel_config(
@@ -41,7 +41,7 @@ if otel_config.headers is not None:
     os.environ["OTEL_EXPORTER_OTLP_TRACES_HEADERS"] = otel_config.headers
 
 if otel_config.endpoint is not None:
-    traceProvider.add_span_processor(
+    TRACE_PROVIDER.add_span_processor(
         BatchSpanProcessor(
             OTLPSpanExporter(
                 endpoint=otel_config.endpoint,
@@ -49,16 +49,16 @@ if otel_config.endpoint is not None:
         ),
     )
 else:
-    traceProvider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+    TRACE_PROVIDER.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
 
-trace.set_tracer_provider(traceProvider)
+trace.set_tracer_provider(TRACE_PROVIDER)
 tracer = trace.get_tracer(resource_attributes[ResourceAttributes.SERVICE_NAME])
 
 reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
-meterProvider = MeterProvider(
+METER_PROVIDER = MeterProvider(
     resource=resource,
     metric_readers=[reader],
 )
 metrics.set_meter_provider(
-    meterProvider,
+    METER_PROVIDER,
 )

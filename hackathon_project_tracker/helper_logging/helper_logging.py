@@ -46,8 +46,7 @@ class Severity(Enum):
             case Severity.ALL:
                 return 0
 
-            case _:
-                raise ValueError
+        raise ValueError
 
 
 class LoggerManager:
@@ -145,14 +144,14 @@ def log(
         )
 
 
-class CustomException(Exception):
+class CustomError(Exception):
     """A custom exception class so that we can match a concrete exception using pattern matching."""
 
     response_code: ResponseCode | None = None
     severity: Severity
 
     def set_severity(
-        self: CustomException,
+        self: CustomError,
         severity: Severity | None,
     ) -> None:
         if severity is None:
@@ -163,25 +162,17 @@ class CustomException(Exception):
             )
             return
 
-        if severity and isinstance(severity, Severity):
-            self.severity = severity
-            return
-
-        error_msg: str = (
-            f"Custom Exception: Trying to set a severity that is not eligible to be attached to a custom exception: {severity.name}."
-        )
-        raise ValueError(
-            error_msg,
-        )
+        self.severity = severity
+        return
 
     def set_response_code(
-        self: CustomException,
+        self: CustomError,
         response_code: ResponseCode | None,
     ) -> None:
         self.response_code = response_code
 
     def get_response_code(
-        self: CustomException,
+        self: CustomError,
     ) -> ResponseCode:
         if response_code := self.response_code:
             return response_code
@@ -211,7 +202,7 @@ def log_with_exception(
     file: str | None,
     response_code: ResponseCode | None = None,
 ) -> Any:  # noqa: ANN401
-    custom_exception: CustomException = CustomException()
+    custom_exception: CustomError = CustomError()
     match the_log:
 
         case str():
@@ -219,17 +210,14 @@ def log_with_exception(
                 the_log=the_log,
                 file=file,
             )
-            custom_exception = CustomException(
+            custom_exception = CustomError(
                 msg,
             )
 
         case dict():
-            custom_exception = CustomException(
+            custom_exception = CustomError(
                 the_log,
             )
-
-        case _:
-            raise ValueError
 
     custom_exception.set_response_code(
         response_code=response_code,

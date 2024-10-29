@@ -1,4 +1,4 @@
-
+# trunk-ignore-all(trunk/ignore-does-nothing)
 import reflex as rx
 
 from .app_style import Style as AppStyle
@@ -20,5 +20,5 @@ app.add_page(
         placeholder_function=State.placeholder_function,
     ),
     route="/",
-    on_load=State.on_load,
+    on_load=State.on_load, # trunk-ignore(pyright/reportArgumentType)
 )

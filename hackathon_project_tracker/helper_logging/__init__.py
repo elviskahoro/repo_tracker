@@ -1,5 +1,16 @@
+__all__ = [
+    "CustomError",
+    "Logger",
+    "Severity",
+    "log",
+    "log_an_exception",
+    "log_with_exception",
+    "setup_logger",
+    "get_otel_config",
+]
+
 from .helper_logging import (
-    CustomException,
+    CustomError,
     Logger,
     Severity,
     log,
