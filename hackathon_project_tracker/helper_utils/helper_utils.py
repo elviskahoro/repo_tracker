@@ -7,7 +7,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
-import pytz  # trunk-ignore(mypy/note,mypy/import,mypy/import-untyped)
+import pytz
 from pydantic import BaseModel, ValidationError
 
 from hackathon_project_tracker.helper_logging import (
@@ -201,7 +201,7 @@ def load_file_then_dump_as_string(
 def load_json_from_gcp(
     url: str | None = None,
 ) -> str:
-    import requests  # trunk-ignore(mypy/note,mypy/import,mypy/import-untyped)
+    import requests
 
     if url is None:
         raise AttributeError
@@ -407,7 +407,7 @@ class FileType(Enum):
                 )
 
             case FileType.YAML:
-                import yaml  # trunk-ignore(mypy/note,mypy/import,mypy/import-untyped)
+                import yaml
 
                 return dict(
                     yaml.safe_load(
