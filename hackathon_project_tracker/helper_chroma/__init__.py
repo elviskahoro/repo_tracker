@@ -1,3 +1,4 @@
-__all__ = ["set_up_client_from_tokens"]
+__all__ = ["add_item", "get_items", "set_up_client_from_tokens"]
 
-from .helper_chroma import set_up_client_from_tokens
+from .helper_chroma import add_item, get_items, set_up_client_from_tokens
+

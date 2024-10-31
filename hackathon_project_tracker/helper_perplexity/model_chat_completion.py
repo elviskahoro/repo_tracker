@@ -3,9 +3,8 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 DEFAULT_PROMPT: str = """
-Give a concrete description of what this GitHub repository does <link_to_github_repository>.
-Make sure to include the programming laguage and the underlying technologies leveraged.
-Format the response in a way that suites a vector database, as that is where this description will be stored.
+Give a short description of what this GitHub repository does <link_to_github_repository>.
+Make sure to also include the primary programming language used.
 """
 
 

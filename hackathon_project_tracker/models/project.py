@@ -28,7 +28,9 @@ class Project(Base, table=True): # trunk-ignore(pyright/reportGeneralTypeIssues,
     created_at: datetime.datetime
     website: str
     repo_url: str
-    description: str
+    description: str = Field(
+        default="",
+    )
 
     def __hash__(
         self: Project,

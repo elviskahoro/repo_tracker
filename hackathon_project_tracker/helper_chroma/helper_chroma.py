@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING
 
 import chromadb
@@ -12,7 +11,6 @@ if TYPE_CHECKING:
 
 
 SPAN_KEY: str = "chroma"
-COLLECTION_NAME: str = "projects"
 
 
 def set_up_client_from_tokens(
@@ -40,7 +38,11 @@ def _get_metadata(
     metadata_keys: list[str],
 ) -> dict:
     item_dict: dict = item.dict()
-    return {key: item_dict[key] for key in metadata_keys if key in item_dict}
+    return {
+        key: item_dict[key]
+        for key in metadata_keys
+        if key in item_dict and item_dict[key] is not None
+    }
 
 
 def add_item(
@@ -92,21 +94,16 @@ def add_item(
         span.add_event(
             name=f"{span_name}-completed",
             attributes=metadata,
-            timestamp=int(
-                datetime.datetime.now(
-                    tz=datetime.timezone.utc,
-                ),
-            ),
         )
 
 
-def get_item(
+def get_items(
     query: str,
     n_results: int,
     collection_name: str,
     client: chromadb.api.client.Client,
 ) -> chromadb.QueryResult:
-    with tracer.start_as_current_span("get_item") as span:
+    with tracer.start_as_current_span("get_items") as span:
         attributes: dict = {
             "query": query,
             "collection_name": collection_name,
@@ -114,7 +111,7 @@ def get_item(
         }
         span.set_attributes(attributes)
         span.add_event(
-            name="get_item-started",
+            name="get_items-started",
             attributes=attributes,
         )
         span.add_event(
@@ -126,7 +123,9 @@ def get_item(
         )
         span.add_event(
             name="get_collection-completed",
-            attributes=collection.__dict__,
+            attributes={
+                "collection_name": collection_name,
+            },
         )
         span.add_event(
             name="query-started",
@@ -138,6 +137,5 @@ def get_item(
         )
         span.add_event(
             name="query-completed",
-            attributes=result,
         )
         return result

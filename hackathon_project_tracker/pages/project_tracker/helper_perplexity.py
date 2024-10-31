@@ -9,7 +9,7 @@ from hackathon_project_tracker.helper_perplexity import (
 )
 
 
-async def perplexity_fetch_repo(
+async def perplexity_get_repo(
     repo_url: str,
     client: Client | None = None,
 ) -> str:
