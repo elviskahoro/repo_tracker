@@ -7,30 +7,16 @@ from hackathon_project_tracker.models.project import Project
 from hackathon_project_tracker.pages.project_tracker.constants import (
     AG_GRID_ID,
     AG_GRID_THEME,
+    DEFAULT_DISTANCE_THRESHOLD_FOR_VECTOR_SEARCH,
     REPO_FILTER_INPUT_ID,
     REPO_SEARCH_INPUT_ID,
-    REPO_STATS_CARD_SIZE,
+    REPO_SIMILARITY_THRESHOLD_MAX,
+    REPO_SIMILARITY_THRESHOLD_MIN,
+    REPO_SIMILARITY_THRESHOLD_STEP,
 )
 from hackathon_project_tracker.pages.project_tracker.state import State
 
 AG_GRID_COLUMN_DEFINITIONS = Project.get_ag_grid_column_definitions()
-
-
-def repo_stats_skeleton() -> rx.Component:
-    return rx.hstack(
-        rx.skeleton(
-            rx.card(
-                "Skeleton card",
-                size=REPO_STATS_CARD_SIZE,
-            ),
-        ),
-        rx.skeleton(
-            rx.card(
-                "Skeleton card",
-                size=REPO_STATS_CARD_SIZE,
-            ),
-        ),
-    )
 
 
 def index() -> rx.Component:
@@ -42,11 +28,28 @@ def index() -> rx.Component:
             width="100%",
             justify_content="space-between",
         ),
-        rx.hstack(
-            rx.button(
-                "Vector search filter",
-                on_click=State.vector_search_filter,
-                margin_bottom="1em",
+        rx.flex(
+            rx.hstack(
+                rx.vstack(
+                    rx.hstack(
+                        rx.button(
+                            "Vector search with filter",
+                            on_click=State.vector_search_filter,
+                            margin_bottom="1em",
+                        ),
+                        rx.heading(State.distance_threshold),
+                    ),
+                    rx.slider(
+                        id="distance-threshold-slider",
+                        min=REPO_SIMILARITY_THRESHOLD_MIN,
+                        max=REPO_SIMILARITY_THRESHOLD_MAX,
+                        step=REPO_SIMILARITY_THRESHOLD_STEP,
+                        default_value=DEFAULT_DISTANCE_THRESHOLD_FOR_VECTOR_SEARCH,
+                        on_change=State.distance_threshold_setter,
+                        on_value_commit=State.distance_threshold_commit,
+                        width="100%",
+                    ),
+                ),
             ),
             rx.spacer(),
             rx.input(
@@ -68,22 +71,19 @@ def index() -> rx.Component:
             rx.vstack(
                 rx.text_area(
                     id=REPO_FILTER_INPUT_ID,
-                    value=State.repo_filter_vector_search_text,
+                    value=State.current_filter_vector_search_text,
                     placeholder="Search keywords in repo description",
                     on_change=State.setter_repo_filter_vector_search_text,
                     width="100%",
-                    min_width="480px",
+                    min_width="380px",
                     height="100%",
                     min_height="100px",
                     resize="horizontal",
                 ),
             ),
             rx.spacer(),
-            rx.cond(
-                State.has_selected_data,
-                rx.fragment(State.repo_stats_card),
-                repo_stats_skeleton(),
-            ),
+            rx.fragment(State.repo_card_stats),
+            rx.fragment(State.repo_card_description),
             width="100%",
         ),
         ag_grid(

@@ -1,7 +1,7 @@
-faker
+chromadb
 reflex>=0.6.3a2
 reflex-ag-grid
-polars
-yfinance==0.2.43
-docutils~=0.21.2
 PyGithub~=2.4.0
+psycopg2
+opentelemetry-exporter-otlp-proto-http
+pytz

@@ -15,9 +15,18 @@ from hackathon_project_tracker.otel import tracer
 from hackathon_project_tracker.pages.project_tracker import helper_github
 from hackathon_project_tracker.tokens import TOKENS
 
-from .constants import REPO_STATS_CARD_SIZE
-from .helper_perplexity import perplexity_fetch_repo
-from .repo_stats import repo_stats
+from .constants import (
+    DEFAULT_DISTANCE_THRESHOLD_FOR_VECTOR_SEARCH,
+    NUMBER_OF_RESULTS_TO_DISPLAY_FOR_VECTOR_SEARCH,
+    NUMBER_OF_WORDS_TO_DISPLAY_FOR_REPO_DESCRIPTION,
+)
+from .helper_chroma import chroma_add_project, chroma_get_projects
+from .helper_perplexity import perplexity_get_repo
+from .repo_cards import (
+    repo_card_description_component,
+    repo_card_skeleton,
+    repo_card_stats_component,
+)
 
 if TYPE_CHECKING:
     import chromadb.api.client
@@ -38,7 +47,9 @@ PERPLEXITY_CLIENT: helper_perplexity.Client = (
 class State(rx.State):
     """The state for the project tracker page."""
 
-    repo_filter_vector_search_text: str = ""
+    distance_threshold: int = DEFAULT_DISTANCE_THRESHOLD_FOR_VECTOR_SEARCH
+    current_filter_vector_search_text: str = ""
+    last_vector_search_filter_text: str = ""
     repo_path_search: str = ""
     ag_grid_selection_repo_path: str | None = None
     ag_grid_selection_project_index: int | None = None
@@ -46,6 +57,19 @@ class State(rx.State):
     projects: list[Project] = []
     projects_to_commit: list[Project] = []
     display_data_indices: list[int] = []
+
+    def distance_threshold_setter(
+        self,
+        value: list[int],
+    ) -> None:
+        self.distance_threshold = value[0]
+
+    def distance_threshold_commit(
+        self,
+        value: list[int],
+    ) -> None:
+        del value
+        self.vector_search_filter()
 
     @staticmethod
     def _find_project_index_using_repo_path(
@@ -77,7 +101,7 @@ class State(rx.State):
         return [self.projects[i].to_ag_grid_dict() for i in self.display_data_indices]
 
     @rx.var
-    def repo_stats_card(
+    def repo_card_stats(
         self,
     ) -> rx.Component:
         project_index: int | None = State._find_project_index_using_repo_path(
@@ -85,22 +109,44 @@ class State(rx.State):
             repo_path=self.ag_grid_selection_repo_path,
         )
         if project_index is None:
-            return rx.fragment()
+            return rx.fragment(repo_card_skeleton())
 
         project: Project = self.projects[project_index]
-        project_description: str = project.description
         return rx.fragment(
-            repo_stats(
+            repo_card_stats_component(
                 repo_path=project.repo_path,
                 repo_url=f"https://github.com/{project.repo_path}",
                 stars=f"{project.stars:,}",
-                language=project.language,
-                website=project.website,
-                website_url=project.website,
+                language=f"{project.language}",
+                website_url=f"{project.website}",
             ),
-            rx.card(
-                project_description,
-                size=REPO_STATS_CARD_SIZE,
+        )
+
+    @rx.var
+    def repo_card_description(
+        self,  # trunk-ignore(ruff/ANN10)
+    ) -> rx.Component:
+        project_index: int | None = State._find_project_index_using_repo_path(
+            projects=self.projects,
+            repo_path=self.ag_grid_selection_repo_path,
+        )
+        if project_index is None:
+            return rx.fragment(
+                repo_card_skeleton(),
+            )
+
+        project: Project = self.projects[project_index]
+        description: str = str(project.description)
+        if first_n_words_from_description := " ".join(
+            project.description.split()[
+                :NUMBER_OF_WORDS_TO_DISPLAY_FOR_REPO_DESCRIPTION
+            ],
+        ):
+            description = first_n_words_from_description
+
+        return rx.fragment(
+            repo_card_description_component(
+                description=description,
             ),
         )
 
@@ -155,15 +201,19 @@ class State(rx.State):
         with tracer.start_as_current_span(
             "setter_repo_filter_vector_search_text",
         ) as span:
-            self.repo_filter_vector_search_text = repo_filter_vector_search_text
+            self.current_filter_vector_search_text = repo_filter_vector_search_text
             span.add_event(
                 name="repo_filter_vector_search_text-set",
                 attributes={
                     "repo_filter_vector_search_text": str(
-                        self.repo_filter_vector_search_text,
+                        self.current_filter_vector_search_text,
                     ),
                 },
             )
+            if not repo_filter_vector_search_text:
+                return
+
+            self.last_vector_search_filter_text = repo_filter_vector_search_text
 
     def display_data_indices_setter(
         self: State,
@@ -411,7 +461,7 @@ class State(rx.State):
             self.clear_repo_path_search()
             yield
 
-            perplexity_description: str = await perplexity_fetch_repo(
+            perplexity_description: str = await perplexity_get_repo(
                 repo_url=project.repo_url,
                 client=PERPLEXITY_CLIENT,
             )
@@ -423,6 +473,12 @@ class State(rx.State):
             self.save_project(project)
             yield
 
+            chroma_add_project(
+                project=project,
+                client=CHROMA_CLIENT,
+            )
+            yield
+
     def vector_search_filter(
         self: State,
     ) -> Generator[rx.Component, None, None]:
@@ -430,9 +486,30 @@ class State(rx.State):
             span.add_event(
                 name="vector_search_filter-called",
                 attributes={
-                    "repo_filter_text": str(self.repo_filter_vector_search_text),
+                    "repo_filter_text": str(self.last_vector_search_filter_text),
                 },
             )
+            distance_threshold: float = self.distance_threshold / 100
+            project_repo_paths: list[str] = chroma_get_projects(
+                repo_filter_vector_search_text=self.last_vector_search_filter_text,
+                n_results=NUMBER_OF_RESULTS_TO_DISPLAY_FOR_VECTOR_SEARCH,
+                client=CHROMA_CLIENT,
+                distance_threshold=distance_threshold,
+            )
+            if project_repo_paths is None or not project_repo_paths:
+                return
+
+            self.display_data_indices = [
+                index
+                for index in (
+                    self._find_project_index_using_repo_path(
+                        projects=self.projects,
+                        repo_path=repo_path,
+                    )
+                    for repo_path in project_repo_paths
+                )
+                if index is not None
+            ]
 
     def on_load(
         self: State,

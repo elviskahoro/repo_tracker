@@ -2,16 +2,47 @@ from __future__ import annotations
 
 import reflex as rx
 
-from .constants import REPO_STATS_CARD_SIZE
+from .constants import REPO_CARD_MAX_WIDTH, REPO_CARD_MIN_WIDTH, REPO_CARD_SIZE
 
 
-def repo_stats(
+def repo_card_skeleton(
+    size: str = REPO_CARD_SIZE,
+    min_width: str = REPO_CARD_MIN_WIDTH,
+    max_width: str = REPO_CARD_MAX_WIDTH,
+) -> rx.Component:
+    return rx.skeleton(
+        rx.card(
+            "Skeleton card",
+            size=size,
+            min_width=min_width,
+            max_width=max_width,
+        ),
+    )
+
+
+def repo_card_description_component(
+    description: str,
+    size: str = REPO_CARD_SIZE,
+    min_width: str = REPO_CARD_MIN_WIDTH,
+    max_width: str = REPO_CARD_MAX_WIDTH,
+) -> rx.Component:
+    return rx.card(
+        description,
+        size=size,
+            min_width=min_width,
+        max_width=max_width,
+    )
+
+
+def repo_card_stats_component(
     repo_path: str,
     repo_url: str,
     stars: str,
     language: str,
-    website: str,
     website_url: str,
+    min_width: str = REPO_CARD_MIN_WIDTH,
+    max_width: str = REPO_CARD_MAX_WIDTH,
+    size: str = REPO_CARD_SIZE,
 ) -> rx.Component:
     return rx.card(
         rx.data_list.root(
@@ -36,13 +67,14 @@ def repo_stats(
                 rx.data_list.label("Website"),
                 rx.data_list.value(
                     rx.link(
-                        website,
+                        website_url,
                         href=website_url,
                     ),
                 ),
             ),
             size="1",
         ),
-        size=REPO_STATS_CARD_SIZE,
-        min_width="100px",
+        size=size,
+        min_width=min_width,
+        max_width=max_width,
     )
