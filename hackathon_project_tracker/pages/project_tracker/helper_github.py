@@ -14,39 +14,6 @@ if TYPE_CHECKING:
     from github.Repository import Repository
 
 
-def create_repo_path(
-    tokens: dict[
-            str,
-            str | None,
-        ],
-) -> str:
-    tokens = helper_utils.check_tokens(
-        tokens=tokens,
-    )
-    github_owner: str | None = tokens.get(
-        "GITHUB_OWNER",
-        None,
-    )
-    github_repo: str | None = tokens.get(
-        "GITHUB_REPO",
-        None,
-    )
-    if github_owner is None:
-        raise AttributeError
-
-    if github_repo is None:
-        raise AttributeError
-
-    github_repo_path: str = f"{github_owner}/{github_repo}"
-    match len(github_repo_path):
-
-        case 0 | 1:
-            raise AttributeError
-
-        case _:
-            return github_repo_path
-
-
 def set_up_client_from_tokens(
     tokens: dict[
             str,
