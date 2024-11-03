@@ -13,7 +13,7 @@ from hackathon_project_tracker.otel import tracer
 async def perplexity_get_repo(
     repo_url: str,
     client: Client | None,
-) -> str:
+) -> str | None:
     with tracer.start_as_current_span("perplexity_get_repo") as span:
         span.add_event(
             name="perplexity_get_repo-started",
