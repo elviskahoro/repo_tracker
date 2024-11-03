@@ -1,3 +1,4 @@
+# trunk-ignore-all(ruff/ANN10)
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Generator
@@ -58,18 +59,18 @@ class State(rx.State):
     projects_to_commit: list[Project] = []
     display_data_indices: list[int] = []
 
-    def distance_threshold_setter(
-        self,
+    def event_distance_threshold_setter(
+        self: State,
         value: list[int],
     ) -> None:
         self.distance_threshold = value[0]
 
-    def distance_threshold_commit(
-        self,
+    def event_distance_threshold_commiter(
+        self: State,
         value: list[int],
     ) -> None:
         del value
-        self.vector_search_filter()
+        self.event_filter_grid_with_vector_search()
 
     @staticmethod
     def _find_project_index_using_repo_path(
@@ -90,19 +91,19 @@ class State(rx.State):
 
     @rx.var(cache=True)
     def has_selected_data(
-        self,
+        self, # trunk-ignore(ruff/ANN10)
     ) -> bool:
         return self.ag_grid_selection_repo_path is not None
 
     @rx.var(cache=True)
     def display_data(
-        self,
+        self,  # trunk-ignore(ruff/ANN10)
     ) -> list[dict]:
         return [self.projects[i].to_ag_grid_dict() for i in self.display_data_indices]
 
     @rx.var
     def repo_card_stats(
-        self,
+        self,  # trunk-ignore(ruff/ANN10)
     ) -> rx.Component:
         project_index: int | None = State._find_project_index_using_repo_path(
             projects=self.projects,
@@ -150,11 +151,12 @@ class State(rx.State):
             ),
         )
 
-    def setter_repo_path_search(
+    def event_repo_path_setter(
         self: State,
         repo_path: str,
     ) -> None:
-        with tracer.start_as_current_span("setter_repo_path_search") as span:
+        span_name: str = "event_repo_path_setter"
+        with tracer.start_as_current_span(span_name) as span:
             self.repo_path_search = repo_path
             span.add_event(
                 name="repo_path_current-set",
@@ -166,20 +168,22 @@ class State(rx.State):
     def clear_repo_path_search(
         self: State,
     ) -> None:
-        with tracer.start_as_current_span("clear_repo_path_search") as span:
+        span_name: str = "event_clear_repo_path_search"
+        with tracer.start_as_current_span(span_name) as span:
             self.repo_path_search = ""
             span.add_event(
                 name="repo_path_current-clear",
             )
 
-    def setter_repo_path_ag_grid_selection(
+    def event_selected_repo_path_from_grid_setter(
         self: State,
         rows: list[dict[str, str]],
         _0: int,
         _1: int,
     ) -> None:
         del _0, _1
-        with tracer.start_as_current_span("setter_repo_path_ag_grid_selection") as span:
+        span_name: str = "event_selected_repo_path_from_grid_setter"
+        with tracer.start_as_current_span(span_name) as span:
             if rows and (repo_path := rows[0].get("repo_path")):
                 self.ag_grid_selection_repo_path = repo_path
                 span.add_event(
@@ -194,13 +198,12 @@ class State(rx.State):
                 name="selection_repo_path-unset",
             )
 
-    def setter_repo_filter_vector_search_text(
+    def event_vector_search_text_to_filter_grid_setter(
         self: State,
         repo_filter_vector_search_text: str,
     ) -> None:
-        with tracer.start_as_current_span(
-            "setter_repo_filter_vector_search_text",
-        ) as span:
+        span_name: str = "event_vector_search_text_to_filter_grid_setter"
+        with tracer.start_as_current_span(span_name) as span:
             self.current_filter_vector_search_text = repo_filter_vector_search_text
             span.add_event(
                 name="repo_filter_vector_search_text-set",
@@ -219,7 +222,8 @@ class State(rx.State):
         self: State,
         display_data_indices: list[int],
     ) -> None:
-        with tracer.start_as_current_span("display_data_indices_setter") as span:
+        span_name: str = "event_display_data_indices_setter"
+        with tracer.start_as_current_span(span_name) as span:
             self.display_data_indices = display_data_indices
             span.add_event(
                 name="display_data_indices-set",
@@ -232,7 +236,8 @@ class State(rx.State):
         self: State,
         project: Project,
     ) -> Generator[None, None, None]:
-        with tracer.start_as_current_span("add_project_to_display_data") as span:
+        span_name: str = "event_add_project_to_display_data"
+        with tracer.start_as_current_span(span_name) as span:
 
             def add_project() -> int:
                 span.add_event(
@@ -315,7 +320,8 @@ class State(rx.State):
             db: Session,
             projects: list[Project],
         ) -> list[Project]:
-            with tracer.start_as_current_span("get_new_projects") as span:
+            span_name: str = "event_get_new_projects"
+            with tracer.start_as_current_span(span_name) as span:
                 span.add_event(
                     name="get_new_projects-started",
                     attributes={
@@ -346,9 +352,8 @@ class State(rx.State):
                 )
                 return new_projects
 
-        with tracer.start_as_current_span(
-            "save_projects_to_db",
-        ) as span, rx.session() as session:
+        span_name: str = "event_save_projects_to_db"
+        with tracer.start_as_current_span(span_name) as span, rx.session() as session:
             if not projects:
                 span.add_event(
                     name="db-projects-no_projects_to_save",
@@ -393,7 +398,8 @@ class State(rx.State):
         self: State,
         project: Project,
     ) -> Generator[None, None, None]:
-        with tracer.start_as_current_span("save_project") as span:
+        span_name: str = "event_save_project"
+        with tracer.start_as_current_span(span_name) as span:
             self.projects_to_commit.append(project)
             span.add_event(
                 name="projects_to_commit-added_project",
@@ -414,11 +420,12 @@ class State(rx.State):
             )
 
     @rx.background
-    async def fetch_repo_and_submit(
+    async def event_github_repo_getter(
         self: State,
     ):
+        span_name: str = "event_fetch_repo_and_submit"
         async with self:
-            span = tracer.start_span("fetch_repo_and_submit")
+            span = tracer.start_span(span_name)
             repo_path_search: str = helper_github.extract_repo_path_from_url(
                 url=self.repo_path_search,
             )
@@ -488,12 +495,13 @@ class State(rx.State):
             )
             yield
 
-    def vector_search_filter(
+    def event_filter_grid_with_vector_search(
         self: State,
-    ) -> Generator[rx.Component, None, None]:
-        with tracer.start_as_current_span("vector_search_filter") as span:
+    ) -> None:
+        span_name: str = "event_filter_grid_with_vector_search"
+        with tracer.start_as_current_span(span_name) as span:
             span.add_event(
-                name="vector_search_filter-called",
+                name="vector_search-queued",
                 attributes={
                     "repo_filter_text": str(self.last_vector_search_filter_text),
                 },
@@ -520,10 +528,11 @@ class State(rx.State):
                 if index is not None
             ]
 
-    def on_load(
+    def event_on_page_load(
         self: State,
     ) -> None:
-        with tracer.start_as_current_span("on_load") as span:
+        span_name: str = "event_on_page_load"
+        with tracer.start_as_current_span(span_name) as span:
             with rx.session() as session:
                 self.projects = (
                     session.exec(
