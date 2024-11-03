@@ -31,8 +31,8 @@ def chroma_add_project(
     )
 
 
-def filter_by_distance(
-    distances: list[list[float]],
+def filter_distances_from_result(
+    result: chromadb.QueryResult,
     threshold: float,
 ) -> list[int]:
     """Filter Chroma results based on distance threshold.
@@ -44,13 +44,12 @@ def filter_by_distance(
     Returns:
         List of indices where distance is below threshold
     """
-    if not distances:
+    distances: list[list[float]] | None = result.get("distances", [])
+    if distances is None or not distances:
         return []
 
     # Return indices where distance is below threshold
-    return [
-        idx for idx, distance in enumerate(distances[0]) if distance <= threshold
-    ]
+    return [idx for idx, distance in enumerate(distances[0]) if distance <= threshold]
 
 
 def chroma_get_projects(
@@ -80,9 +79,9 @@ def chroma_get_projects(
                 "n_results-output": len(result.get("ids", [])),
             },
         )
-        print(result)
-        filtered_indices: list[int] = filter_by_distance(
-            result.get("distances", []), distance_threshold,
+        filtered_indices: list[int] = filter_distances_from_result(
+            result=result,
+            threshold=distance_threshold,
         )
         filtered_results: list[str] = [result["ids"][0][i] for i in filtered_indices]
         return filtered_results
