@@ -58,7 +58,7 @@ class Client:
                     response: Response = await client.post(
                         url=f"{BASE_API_URL}/chat/completions",
                         headers=headers,
-                        data=chat_completion.model_dump_json(),
+                        content=chat_completion.model_dump_json(),
                     )
                     response.raise_for_status()
 
