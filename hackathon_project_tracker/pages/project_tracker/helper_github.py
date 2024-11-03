@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, Generator
 
 from github import Github
@@ -13,6 +14,10 @@ if TYPE_CHECKING:
     from github.PullRequest import PullRequest
     from github.Repository import Repository
 
+
+GITHUB_REPO_PARSER_REGEX: re.Pattern = re.compile(
+    r"^https://github\.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)$",
+)
 
 def set_up_client_from_tokens(
     tokens: dict[
@@ -92,33 +97,12 @@ def set_up_client_from_tokens(
 def extract_repo_path_from_url(
     url: str,
 ) -> str:
-    """Extract repository path from GitHub URL.
+    match: re.Match | None = GITHUB_REPO_PARSER_REGEX.match(url)
+    if match is None:
+        error_message: str = "Invalid GitHub URL format. Expected format: owner/repo"
+        raise ValueError(error_message)
 
-    Args:
-        url: GitHub repository URL (e.g., 'https://github.com/owner/repo' or 'github.com/owner/repo')
-
-    Returns:
-        Repository path in format 'owner/repo'
-
-    Raises:
-        ValueError: If URL format is invalid
-    """
-    # Remove protocol prefix if present
-    url = url.replace("https://", "").replace("http://", "")
-
-    # Remove github.com prefix if present
-    if url.startswith("github.com/"):
-        url = url.replace("github.com/", "")
-
-    # Remove trailing slash and .git suffix if present
-    url = url.rstrip("/").replace(".git", "")
-
-    # Validate format (should be owner/repo)
-    parts = url.split("/")
-    if len(parts) != 2:
-        raise ValueError("Invalid GitHub URL format. Expected format: owner/repo")
-
-    return url
+    return match.group("owner") + "/" + match.group("repo")
 
 
 def check_client(
