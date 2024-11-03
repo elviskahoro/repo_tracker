@@ -18,5 +18,5 @@ app = rx.App(
 app.add_page(
     component=index,
     route="/",
-    on_load=State.on_load, # trunk-ignore(pyright/reportArgumentType)
+    on_load=State.event_on_page_load, # trunk-ignore(pyright/reportArgumentType)
 )
