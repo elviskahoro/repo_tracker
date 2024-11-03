@@ -467,14 +467,15 @@ class State(rx.State):
             self.clear_repo_path_search()
             yield
 
-            perplexity_description: str = await perplexity_get_repo(
+            perplexity_description: str | None = await perplexity_get_repo(
                 repo_url=project.repo_url,
                 client=PERPLEXITY_CLIENT,
             )
-            project.set_description(
-                description=perplexity_description,
-            )
-            yield
+            if perplexity_description is not None:
+                project.set_description(
+                    description=perplexity_description,
+                )
+                yield
 
             for _ in self.save_project(project):
                 yield
