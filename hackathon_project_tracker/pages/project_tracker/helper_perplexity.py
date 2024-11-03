@@ -7,21 +7,34 @@ from hackathon_project_tracker.helper_perplexity import (
     Client,
     Message,
 )
+from hackathon_project_tracker.otel import tracer
 
 
 async def perplexity_get_repo(
     repo_url: str,
-    client: Client | None = None,
+    client: Client | None,
 ) -> str:
-    if client is None:
-        raise AssertionError("Client is required")
+    with tracer.start_as_current_span("perplexity_get_repo") as span:
+        span.add_event(
+            name="perplexity_get_repo-started",
+            attributes={
+                "repo_url": repo_url,
+            },
+        )
+        if client is None:
+            error_message: str = "Client is required"
+            span.record_exception(AssertionError(error_message))
+            span.add_event(
+                name="perplexity_get_repo-error",
+            )
+            raise AssertionError(error_message)
 
-    content: str = DEFAULT_PROMPT.replace(
-        "<link_to_github_repository>",
-        repo_url,
-    )
-    chat_completion: ChatCompletion = ChatCompletion(
-        messages=[
+        content: str = DEFAULT_PROMPT.replace(
+            "<link_to_github_repository>",
+            repo_url,
+        )
+        chat_completion: ChatCompletion = ChatCompletion(
+            messages=[
             Message(
                 content=content,
             ),
