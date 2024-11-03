@@ -121,6 +121,25 @@ def extract_repo_path_from_url(
     return url
 
 
+def check_client(
+    client: Github | None,
+) -> Github:
+    with tracer.start_as_current_span("check_client") as span:
+        span.add_event(
+            name="check_client-started",
+        )
+        if client is None:
+            error_message: str = "Client is required"
+            exception: AssertionError = AssertionError(error_message)
+            span.record_exception(exception)
+            span.add_event(
+                name="check_client-error",
+            )
+            raise exception
+
+        return client
+
+
 def fetch_repo(
     repo_path: str,
     client: Github,
@@ -134,6 +153,9 @@ def fetch_repo(
         )
         repo: Repository | None = None
         try:
+            client = check_client(
+                client=client,
+            )
             repo = client.get_repo(repo_path)
             span.add_event(
                 name="fetch_repo-completed",
