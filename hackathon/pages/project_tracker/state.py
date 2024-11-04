@@ -358,6 +358,7 @@ class State(rx.State):
                 span.add_event(
                     name="db-projects-no_projects_to_save",
                 )
+                yield
                 return
 
             projects_to_save: list[Project] = filter_projects_to_save(
@@ -383,6 +384,7 @@ class State(rx.State):
                         },
                     )
 
+                yield
                 return
 
             session.bulk_save_objects(projects_to_save)
@@ -393,6 +395,7 @@ class State(rx.State):
                     "project_count": len(projects_to_save),
                 },
             )
+            yield
 
     def save_project(
         self: State,
