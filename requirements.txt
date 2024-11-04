@@ -5,3 +5,4 @@ PyGithub~=2.4.0
 psycopg2
 opentelemetry-exporter-otlp-proto-http
 pytz
+perplexityai
