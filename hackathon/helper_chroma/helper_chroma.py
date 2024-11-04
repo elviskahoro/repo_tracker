@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING
 
 import chromadb
 
-from hackathon_project_tracker.otel import tracer
+from hackathon.otel import tracer
 
 if TYPE_CHECKING:
-    from hackathon_project_tracker.models.project import Project
+    from hackathon.models.project import Project
 
 
 SPAN_KEY: str = "chroma"

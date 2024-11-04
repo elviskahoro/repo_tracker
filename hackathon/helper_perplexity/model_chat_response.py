@@ -4,7 +4,7 @@ from uuid import UUID  # trunk-ignore(ruff/TCH003)
 
 from pydantic import BaseModel
 
-from hackathon_project_tracker.otel import tracer
+from hackathon.otel import tracer
 
 
 class Delta(BaseModel):

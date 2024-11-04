@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, NamedTuple
 import pytz
 from pydantic import BaseModel, ValidationError
 
-from hackathon_project_tracker.helper_logging import (
+from hackathon.helper_logging import (
     Severity,
     log,
     log_an_exception,

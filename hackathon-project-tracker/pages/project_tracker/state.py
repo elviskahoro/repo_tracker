@@ -10,11 +10,11 @@ from github import Github
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from hackathon_project_tracker import helper_chroma, helper_perplexity
-from hackathon_project_tracker.models.project import Project
-from hackathon_project_tracker.otel import tracer
-from hackathon_project_tracker.pages.project_tracker import helper_github
-from hackathon_project_tracker.tokens import TOKENS
+from hackathon import helper_chroma, helper_perplexity
+from hackathon.models.project import Project
+from hackathon.otel import tracer
+from hackathon.pages.project_tracker import helper_github
+from hackathon.tokens import TOKENS
 
 from .constants import (
     DEFAULT_DISTANCE_THRESHOLD_FOR_VECTOR_SEARCH,

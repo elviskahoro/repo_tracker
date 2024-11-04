@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from hackathon_project_tracker.helper_perplexity import (
+from hackathon.helper_perplexity import (
     DEFAULT_PROMPT,
     ChatCompletion,
     ChatResponse,
     Client,
     Message,
 )
-from hackathon_project_tracker.otel import tracer
+from hackathon.otel import tracer
 
 
 async def perplexity_get_repo(

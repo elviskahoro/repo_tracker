@@ -15,11 +15,11 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExport
 from opentelemetry.semconv.resource import ResourceAttributes
 from reflex.config import get_config
 
-from hackathon_project_tracker.helper_logging.helper_otel import (
+from hackathon.helper_logging.helper_otel import (
     OtelConfig,
     get_otel_config,
 )
-from hackathon_project_tracker.tokens import TOKENS
+from hackathon.tokens import TOKENS
 
 otel_config: OtelConfig = get_otel_config(
     tokens=TOKENS,

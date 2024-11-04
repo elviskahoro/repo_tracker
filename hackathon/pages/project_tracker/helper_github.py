@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING, Generator
 from github import Github
 from github.GithubException import GithubException
 
-from hackathon_project_tracker import helper_utils
-from hackathon_project_tracker.helper_logging import Severity, log
-from hackathon_project_tracker.otel import tracer
+from hackathon import helper_utils
+from hackathon.helper_logging import Severity, log
+from hackathon.otel import tracer
 
 if TYPE_CHECKING:
     from github.PullRequest import PullRequest

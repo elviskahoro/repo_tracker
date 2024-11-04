@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import chromadb
 
-    from hackathon_project_tracker.models.project import Project
+    from hackathon.models.project import Project
 
-from hackathon_project_tracker import helper_chroma
-from hackathon_project_tracker.otel import tracer
+from hackathon import helper_chroma
+from hackathon.otel import tracer
 
 
 def chroma_add_project(

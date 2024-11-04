@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import httpx
 from pydantic.dataclasses import dataclass
 
-from hackathon_project_tracker.otel import tracer
+from hackathon.otel import tracer
 
 if TYPE_CHECKING:
     from httpx import Response
