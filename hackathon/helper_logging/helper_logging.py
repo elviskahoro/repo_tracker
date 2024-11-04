@@ -68,7 +68,7 @@ class LoggerManager:
     def _setup_logger(
         cls: type[LoggerManager],
         file_name: str | None = None,
-        severity_to_show: Severity = Severity.ALL,
+        severity_to_show: Severity = Severity.INFO,
     ) -> Logger:
         """Sets up the logger configuration."""
         if file_name is not None:
