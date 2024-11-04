@@ -99,8 +99,7 @@ def extract_repo_path_from_url(
 ) -> str:
     match: re.Match | None = GITHUB_REPO_PARSER_REGEX.match(url)
     if match is None:
-        error_message: str = "Invalid GitHub URL format. Expected format: owner/repo"
-        raise ValueError(error_message)
+        return url
 
     return match.group("owner") + "/" + match.group("repo")
 
