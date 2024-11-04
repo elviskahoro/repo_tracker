@@ -2,7 +2,7 @@ chromadb
 reflex>=0.6.3a2
 reflex-ag-grid
 PyGithub~=2.4.0
-psycopg2
+psycopg2-binary
 opentelemetry-exporter-otlp-proto-http
 pytz
 perplexityai
