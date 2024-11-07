@@ -11,7 +11,7 @@ class OtelConfig(NamedTuple):
 
 
 def get_otel_config(
-    tokens: dict[str, str],
+    tokens: dict[str, str | None],
 ) -> OtelConfig:
     otel_provider = tokens.get("OTEL_PROVIDER_TOKEN_NAME")
     match otel_provider:

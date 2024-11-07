@@ -28,7 +28,7 @@ resource_attributes: dict[str, str] = {
     ResourceAttributes.SERVICE_NAME: get_config().app_name,
 }
 resource = Resource(
-    attributes=resource_attributes, # trunk-ignore(pyright/reportArgumentType)
+    attributes=resource_attributes,
 )
 
 TRACE_PROVIDER = TracerProvider(

@@ -1,4 +1,4 @@
-# trunk-ignore-all(ruff/ANN10)
+# trunk-ignore-all(ruff/ANN10,ruff/ANN101,ruff/RUF012,trunk/ignore-does-nothing)
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Generator
@@ -6,9 +6,7 @@ from typing import TYPE_CHECKING, Generator
 import chromadb
 import chromadb.api
 import reflex as rx
-from github import Github
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from hackathon import helper_chroma, helper_perplexity
 from hackathon.models.project import Project
@@ -31,15 +29,17 @@ from .repo_cards import (
 
 if TYPE_CHECKING:
     import chromadb.api.client
-    from github.Repository import Repository
-CHROMA_CLIENT: chromadb.HttpClient = helper_chroma.set_up_client_from_tokens(
+    import github
+    from sqlalchemy.orm import Session
+
+CHROMA_CLIENT: chromadb.api.ClientAPI | None = helper_chroma.set_up_client_from_tokens(
     tokens=TOKENS,
 )
-GITHUB_CLIENT: Github = helper_github.set_up_client_from_tokens(
+GITHUB_CLIENT: github.Github | None = helper_github.set_up_client_from_tokens(
     tokens=TOKENS,
 )
-PERPLEXITY_CLIENT: helper_perplexity.Client = (
-    helper_perplexity.Client.set_up_client_from_tokens(
+PERPLEXITY_CLIENT: helper_perplexity.Client | None = (
+    helper_perplexity.set_up_client_from_tokens(
         tokens=TOKENS,
     )
 )
@@ -60,13 +60,13 @@ class State(rx.State):
     display_data_indices: list[int] = []
 
     def event_distance_threshold_setter(
-        self: State,
-        value: list[int],
+        self,
+        value: list[int | float],
     ) -> None:
         self.distance_threshold = value[0]
 
     def event_distance_threshold_commiter(
-        self: State,
+        self,
         value: list[int],
     ) -> None:
         del value
@@ -76,7 +76,7 @@ class State(rx.State):
     def _find_project_index_using_repo_path(
         projects: list[Project],
         repo_path: str | None,
-    ) -> Project | None:
+    ) -> int | None:
         if repo_path is None:
             return None
 
@@ -91,19 +91,19 @@ class State(rx.State):
 
     @rx.var(cache=True)
     def has_selected_data(
-        self, # trunk-ignore(ruff/ANN10)
+        self,
     ) -> bool:
         return self.ag_grid_selection_repo_path is not None
 
     @rx.var(cache=True)
     def display_data(
-        self,  # trunk-ignore(ruff/ANN10)
+        self,
     ) -> list[dict]:
         return [self.projects[i].to_ag_grid_dict() for i in self.display_data_indices]
 
     @rx.var
     def repo_card_stats(
-        self,  # trunk-ignore(ruff/ANN10)
+        self,
     ) -> rx.Component:
         project_index: int | None = State._find_project_index_using_repo_path(
             projects=self.projects,
@@ -125,7 +125,7 @@ class State(rx.State):
 
     @rx.var
     def repo_card_description(
-        self,  # trunk-ignore(ruff/ANN10)
+        self,
     ) -> rx.Component:
         project_index: int | None = State._find_project_index_using_repo_path(
             projects=self.projects,
@@ -152,7 +152,7 @@ class State(rx.State):
         )
 
     def event_repo_path_setter(
-        self: State,
+        self,
         repo_path: str,
     ) -> None:
         span_name: str = "event_repo_path_setter"
@@ -166,7 +166,7 @@ class State(rx.State):
             )
 
     def clear_repo_path_search(
-        self: State,
+        self,
     ) -> None:
         span_name: str = "event_clear_repo_path_search"
         with tracer.start_as_current_span(span_name) as span:
@@ -176,7 +176,7 @@ class State(rx.State):
             )
 
     def event_selected_repo_path_from_grid_setter(
-        self: State,
+        self,
         rows: list[dict[str, str]],
         _0: int,
         _1: int,
@@ -199,7 +199,7 @@ class State(rx.State):
             )
 
     def event_vector_search_text_to_filter_grid_setter(
-        self: State,
+        self,
         repo_filter_vector_search_text: str,
     ) -> None:
         span_name: str = "event_vector_search_text_to_filter_grid_setter"
@@ -219,7 +219,7 @@ class State(rx.State):
             self.last_vector_search_filter_text = repo_filter_vector_search_text
 
     def display_data_indices_setter(
-        self: State,
+        self,
         display_data_indices: list[int],
     ) -> None:
         span_name: str = "event_display_data_indices_setter"
@@ -233,7 +233,7 @@ class State(rx.State):
             )
 
     def add_project_to_display_data(
-        self: State,
+        self,
         project: Project,
     ) -> Generator[None, None, None]:
         span_name: str = "event_add_project_to_display_data"
@@ -313,7 +313,7 @@ class State(rx.State):
                 )
 
     def _save_projects_to_db(
-        self: State,
+        self,
         projects: list[Project],
     ) -> Generator[None, None, None]:
         def filter_projects_to_save(
@@ -329,7 +329,10 @@ class State(rx.State):
                     },
                 )
                 existing_repo_paths: set[str] = {
-                    str(path[0]) for path in db.query(Project.repo_path).all()
+                    str(path[0])
+                    for path in db.query( # trunk-ignore(pyright/reportCallIssue)
+                        Project.repo_path, # trunk-ignore(pyright/reportArgumentType)
+                    ).all()
                 }
                 span.add_event(
                     name="get_new_projects-existing_repo_paths",
@@ -398,7 +401,7 @@ class State(rx.State):
             yield
 
     def save_project(
-        self: State,
+        self,
         project: Project,
     ) -> Generator[None, None, None]:
         span_name: str = "event_save_project"
@@ -424,7 +427,7 @@ class State(rx.State):
 
     @rx.background
     async def event_github_repo_getter(
-        self: State,
+        self,
     ):
         span_name: str = "event_fetch_repo_and_submit"
         async with self:
@@ -432,9 +435,12 @@ class State(rx.State):
             repo_path_search: str = helper_github.extract_repo_path_from_url(
                 url=self.repo_path_search,
             )
-            repo: Repository | None = helper_github.fetch_repo(
-                repo_path=repo_path_search,
+            client_github: github.Github = helper_github.check_client(
                 client=GITHUB_CLIENT,
+            )
+            repo: github.Repository | None = helper_github.fetch_repo(
+                repo_path=repo_path_search,
+                client=client_github,
             )
             if repo is None:
                 span_event_name: str = "repo-not_found"
@@ -499,7 +505,7 @@ class State(rx.State):
             yield
 
     def event_filter_grid_with_vector_search(
-        self: State,
+        self,
     ) -> None:
         span_name: str = "event_filter_grid_with_vector_search"
         with tracer.start_as_current_span(span_name) as span:
@@ -516,7 +522,13 @@ class State(rx.State):
                 client=CHROMA_CLIENT,
                 distance_threshold=distance_threshold,
             )
-            if project_repo_paths is None or not project_repo_paths:
+            if not project_repo_paths:
+                span.add_event(
+                    name="project_repo_paths-is_empty",
+                    attributes={
+                        "project_repo_paths-length": len(project_repo_paths),
+                    },
+                )
                 return
 
             self.display_data_indices = [
@@ -532,14 +544,14 @@ class State(rx.State):
             ]
 
     def event_on_page_load(
-        self: State,
+        self,
     ) -> None:
         span_name: str = "event_on_page_load"
         with tracer.start_as_current_span(span_name) as span:
             with rx.session() as session:
                 self.projects = (
-                    session.exec(
-                        statement=select(Project),
+                    session.exec(  # trunk-ignore(pyright/reportCallIssue)
+                        statement=select(Project), # trunk-ignore(pyright/reportArgumentType)
                     )
                     .scalars()
                     .all()

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-TOKENS: dict[str, str] = {
+TOKENS: dict[str, str | None] = {
     "CHROMA_DATABASE": "devxhackathonprojecttracker",
     "CHROMA_API_KEY": os.getenv("CHROMA_API_KEY"),
     "CHROMA_TENANT": os.getenv("CHROMA_TENANT"),

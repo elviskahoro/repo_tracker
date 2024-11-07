@@ -14,9 +14,10 @@ SPAN_KEY: str = "chroma"
 
 
 def set_up_client_from_tokens(
-    tokens: dict[str, str],
+    tokens: dict[str, str | None],
 ) -> chromadb.api.ClientAPI | None:
-    with tracer.start_as_current_span("set_up_client_from_tokens") as span:
+    span_name: str = f"{SPAN_KEY}-set_up_client_from_tokens"
+    with tracer.start_as_current_span(span_name) as span:
         required_tokens: list[str] = ["CHROMA_TENANT", "CHROMA_DATABASE", "CHROMA_API_KEY"]
         missing_tokens = [token for token in required_tokens if not tokens.get(token)]
         for token in missing_tokens:
@@ -111,7 +112,8 @@ def get_items(
     collection_name: str,
     client: chromadb.api.client.Client,
 ) -> chromadb.QueryResult:
-    with tracer.start_as_current_span("get_items") as span:
+    span_name: str = f"{SPAN_KEY}-get_items"
+    with tracer.start_as_current_span(span_name) as span:
         attributes: dict = {
             "query": query,
             "collection_name": collection_name,

@@ -16,6 +16,8 @@ from .model_chat_response import ChatResponse
 
 BASE_API_URL: str = "https://api.perplexity.ai"
 TIMEOUT: int = 30
+SPAN_KEY: str = "perplexity"
+
 
 @dataclass
 class Client:
@@ -24,9 +26,10 @@ class Client:
     @classmethod
     def set_up_client_from_tokens(
         cls: type[Client],
-        tokens: list[str],
+        tokens: dict[str, str | None],
     ) -> Client | None:
-        with tracer.start_as_current_span("set_up_client_from_tokens") as span:
+        span_name: str = f"{SPAN_KEY}-client-set_up_client_from_tokens"
+        with tracer.start_as_current_span(span_name) as span:
             token: str | None = tokens.get("PERPLEXITY_API_KEY")
             if token is None:
                 span.add_event(
@@ -45,7 +48,8 @@ class Client:
         self: Client,
         chat_completion: ChatCompletion,
     ) -> ChatResponse:
-        with tracer.start_as_current_span("call_perplexity_api") as span:
+        span_name: str = f"{SPAN_KEY}-client-call_perplexity_api"
+        with tracer.start_as_current_span(span_name) as span:
             api_key = self.token
             headers: dict[str, str] = {
                 "Authorization": f"Bearer {api_key}",
@@ -74,4 +78,15 @@ class Client:
                 )
                 raise TimeoutError(error_message) from e
 
-            return ChatResponse.model_validate(response.json())
+            return ChatResponse.model_validate(
+                obj=response.json(),
+            )
+
+def set_up_client_from_tokens(
+    tokens: dict[str, str | None],
+) -> Client | None:
+    span_name: str = f"{SPAN_KEY}-set_up_client_from_tokens"
+    with tracer.start_as_current_span(span_name):
+        return Client.set_up_client_from_tokens(
+            tokens=tokens,
+        )
