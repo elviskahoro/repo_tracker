@@ -8,24 +8,24 @@ import chromadb.api
 import reflex as rx
 from sqlalchemy import select
 
-from hackathon import helper_chroma, helper_perplexity
+from hackathon import helper_chroma, helper_github, helper_perplexity
+from hackathon.app_state import AppState
 from hackathon.models.project import Project
 from hackathon.otel import tracer
-from hackathon.pages.project_tracker import helper_github
 from hackathon.tokens import TOKENS
 
+from .components.repo_cards import (
+    repo_card_description_component,
+    repo_card_skeleton,
+    repo_card_stats_component,
+)
 from .constants import (
     DEFAULT_DISTANCE_THRESHOLD_FOR_VECTOR_SEARCH,
     NUMBER_OF_RESULTS_TO_DISPLAY_FOR_VECTOR_SEARCH,
     NUMBER_OF_WORDS_TO_DISPLAY_FOR_REPO_DESCRIPTION,
 )
-from .helper_chroma import chroma_add_project, chroma_get_projects
-from .helper_perplexity import perplexity_get_repo
-from .repo_cards import (
-    repo_card_description_component,
-    repo_card_skeleton,
-    repo_card_stats_component,
-)
+from .helpers.helper_chroma import chroma_add_project, chroma_get_projects
+from .helpers.helper_perplexity import perplexity_get_repo
 
 if TYPE_CHECKING:
     import chromadb.api.client
@@ -46,8 +46,6 @@ PERPLEXITY_CLIENT: helper_perplexity.Client | None = (
 
 
 class State(rx.State):
-    """The state for the project tracker page."""
-
     distance_threshold: int = DEFAULT_DISTANCE_THRESHOLD_FOR_VECTOR_SEARCH
     current_filter_vector_search_text: str = ""
     last_vector_search_filter_text: str = ""
@@ -55,8 +53,6 @@ class State(rx.State):
     ag_grid_selection_repo_path: str | None = None
     ag_grid_selection_project_index: int | None = None
 
-    projects: list[Project] = []
-    projects_to_commit: list[Project] = []
     display_data_indices: list[int] = []
 
     def event_distance_threshold_setter(
@@ -99,20 +95,20 @@ class State(rx.State):
     def display_data(
         self,
     ) -> list[dict]:
-        return [self.projects[i].to_ag_grid_dict() for i in self.display_data_indices]
+        return [AppState.projects[i].to_ag_grid_dict() for i in self.display_data_indices]
 
     @rx.var
     def repo_card_stats(
         self,
     ) -> rx.Component:
         project_index: int | None = State._find_project_index_using_repo_path(
-            projects=self.projects,
+            projects=AppState.projects,
             repo_path=self.ag_grid_selection_repo_path,
         )
         if project_index is None:
             return rx.fragment(repo_card_skeleton())
 
-        project: Project = self.projects[project_index]
+        project: Project = AppState.projects[project_index]
         return rx.fragment(
             repo_card_stats_component(
                 repo_path=project.repo_path,
@@ -128,7 +124,7 @@ class State(rx.State):
         self,
     ) -> rx.Component:
         project_index: int | None = State._find_project_index_using_repo_path(
-            projects=self.projects,
+            projects=AppState.projects,
             repo_path=self.ag_grid_selection_repo_path,
         )
         if project_index is None:
@@ -136,7 +132,7 @@ class State(rx.State):
                 repo_card_skeleton(),
             )
 
-        project: Project = self.projects[project_index]
+        project: Project = AppState.projects[project_index]
         description: str = str(project.description)
         if first_n_words_from_description := " ".join(
             project.description.split()[
@@ -246,9 +242,9 @@ class State(rx.State):
                         "project_repo_path": str(project.repo_path),
                     },
                 )
-                self.projects.append(project)
+                AppState.projects.append(project)
                 project_index = self._find_project_index_using_repo_path(
-                    projects=self.projects,
+                    projects=AppState.projects,
                     repo_path=project.repo_path,
                 )
                 if project_index is None:
@@ -260,7 +256,7 @@ class State(rx.State):
                 return project_index
 
             project_index: int | None = self._find_project_index_using_repo_path(
-                projects=self.projects,
+                projects=AppState.projects,
                 repo_path=project.repo_path,
             )
             span.add_event(
@@ -406,7 +402,7 @@ class State(rx.State):
     ) -> Generator[None, None, None]:
         span_name: str = "event_save_project"
         with tracer.start_as_current_span(span_name) as span:
-            self.projects_to_commit.append(project)
+            AppState.projects_to_commit.append(project)
             span.add_event(
                 name="projects_to_commit-added_project",
                 attributes={
@@ -414,13 +410,13 @@ class State(rx.State):
                 },
             )
             yield from self._save_projects_to_db(
-                projects=self.projects_to_commit,
+                projects=AppState.projects_to_commit,
             )
 
             span.add_event(
                 name="projects_to_commit-saved_to_db",
             )
-            self.projects_to_commit.clear()
+            AppState.projects_to_commit.clear()
             span.add_event(
                 name="projects_to_commit-cleared",
             )
@@ -532,7 +528,7 @@ class State(rx.State):
                 index
                 for index in (
                     self._find_project_index_using_repo_path(
-                        projects=self.projects,
+                        projects=AppState.projects,
                         repo_path=repo_path,
                     )
                     for repo_path in project_repo_paths
@@ -546,7 +542,7 @@ class State(rx.State):
         span_name: str = "event_on_page_load"
         with tracer.start_as_current_span(span_name) as span:
             with rx.session() as session:
-                self.projects = (
+                AppState.projects = (
                     session.exec(  # trunk-ignore(pyright/reportCallIssue)
                         statement=select(Project), # trunk-ignore(pyright/reportArgumentType)
                     )
@@ -557,7 +553,7 @@ class State(rx.State):
             span.add_event(
                 name="projects-loaded",
                 attributes={
-                    "project_count": len(self.projects),
+                    "project_count": len(AppState.projects),
                 },
             )
-            self.display_data_indices = list(range(len(self.projects)))
+            self.display_data_indices = list(range(len(AppState.projects)))

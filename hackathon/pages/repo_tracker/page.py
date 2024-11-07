@@ -5,7 +5,7 @@ import reflex as rx
 from reflex_ag_grid import ag_grid
 
 from hackathon.models.project import Project
-from hackathon.pages.project_tracker.constants import (
+from hackathon.pages.repo_tracker.constants import (
     AG_GRID_ID,
     AG_GRID_THEME,
     DEFAULT_DISTANCE_THRESHOLD_FOR_VECTOR_SEARCH,
@@ -15,7 +15,7 @@ from hackathon.pages.project_tracker.constants import (
     REPO_SIMILARITY_THRESHOLD_MIN,
     REPO_SIMILARITY_THRESHOLD_STEP,
 )
-from hackathon.pages.project_tracker.state import State
+from hackathon.pages.repo_tracker.state import State
 
 AG_GRID_COLUMN_DEFINITIONS = Project.get_ag_grid_column_definitions()
 
