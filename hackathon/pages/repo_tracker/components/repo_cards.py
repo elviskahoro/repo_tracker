@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import reflex as rx
 
-from .constants import REPO_CARD_MAX_WIDTH, REPO_CARD_MIN_WIDTH, REPO_CARD_SIZE
+from hackathon.pages.repo_tracker.constants import (
+    REPO_CARD_MAX_WIDTH,
+    REPO_CARD_MIN_WIDTH,
+    REPO_CARD_SIZE,
+)
 
 
 def repo_card_skeleton(
