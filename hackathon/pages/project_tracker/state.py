@@ -446,15 +446,14 @@ class State(rx.State):
                 span_event_name: str = "repo-not_found"
                 repo_path: str = self.repo_path_search
                 self.clear_repo_path_search()
-                yield rx.toast.error(
-                    span_event_name,
-                )
-
                 span.add_event(
                     name=span_event_name,
                     attributes={
                         "repo_path": repo_path,
                     },
+                )
+                yield rx.toast.error(
+                    message=span_event_name,
                 )
                 return
 
