@@ -1,3 +1,4 @@
+# trunk-ignore-all(pyright/reportArgumentType)
 from __future__ import annotations
 
 import reflex as rx

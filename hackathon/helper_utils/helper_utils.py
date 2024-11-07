@@ -46,7 +46,7 @@ def check_tokens(
 
 def create_datetime_from_timestamp_float(
     timestamp: float,
-    tz: datetime.tzinfo | None = None,  # trunk-ignore(pylint/C0103)
+    tz: datetime.tzinfo | None = None,
 ) -> datetime.datetime:
     if tz is None:
         tz = pytz.timezone("US/Pacific")
@@ -60,7 +60,7 @@ def create_datetime_from_timestamp_float(
 def create_datetime_from_timestamp_string(
     timestamp: str,
     timestamp_format: str = "%Y-%m-%dT%H:%M:%S.%fZ",
-    tz: datetime.tzinfo | None = None,  # trunk-ignore(pylint/C0103)
+    tz: datetime.tzinfo | None = None,
 ) -> datetime.datetime:
     if tz is None:
         tz = pytz.timezone(
@@ -384,7 +384,8 @@ class FileType(Enum):
         match self:
 
             case FileType.CSV:
-                import pandas as pd
+                import pandas as pd  # TODO(elvis): change this from pandas to polars
+                # https://elvis.ai
 
                 data = pd.read_csv(
                     filepath_or_buffer=file_path,

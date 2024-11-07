@@ -125,7 +125,7 @@ def check_client(
 
 def fetch_repo(
     repo_path: str,
-    client: Github,
+    client: Github | None,
 ) -> Repository | None:
     with tracer.start_as_current_span("fetch_repo") as span:
         span.add_event(

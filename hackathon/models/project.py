@@ -1,5 +1,5 @@
 """Models related to hackathon projects."""
-# trunk-ignore-all(pyright/reportMissingTypeStubs)
+# trunk-ignore-all(trunk/ignore-does-nothing)
 from __future__ import annotations
 
 import datetime  # trunk-ignore(ruff/TCH003)
