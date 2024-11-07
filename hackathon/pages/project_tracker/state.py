@@ -1,7 +1,7 @@
 # trunk-ignore-all(ruff/ANN10,ruff/ANN101,ruff/RUF012,trunk/ignore-does-nothing)
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, AsyncGenerator, Generator
 
 import chromadb
 import chromadb.api
@@ -235,7 +235,7 @@ class State(rx.State):
     def add_project_to_display_data(
         self,
         project: Project,
-    ) -> Generator[None, None, None]:
+    ) -> None:
         span_name: str = "event_add_project_to_display_data"
         with tracer.start_as_current_span(span_name) as span:
 
@@ -428,7 +428,7 @@ class State(rx.State):
     @rx.background
     async def event_github_repo_getter(
         self,
-    ):
+    ) -> AsyncGenerator[rx.Component | None, None]:
         span_name: str = "event_fetch_repo_and_submit"
         async with self:
             span = tracer.start_span(span_name)
@@ -494,8 +494,6 @@ class State(rx.State):
 
             for _ in self.save_project(project):
                 yield
-
-            yield
 
             chroma_add_project(
                 project=project,
