@@ -3,7 +3,7 @@ import reflex as rx
 
 from .app_style import Style as AppStyle
 from .pages.repo_tracker.page import index
-from .pages.repo_tracker.state import State
+from .pages.repo_tracker.state_repo import RepoState
 
 APP_STYLE: AppStyle = AppStyle()
 
@@ -18,5 +18,5 @@ app = rx.App(
 app.add_page(
     component=index,
     route="/",
-    on_load=State.event_on_page_load, # trunk-ignore(pyright/reportArgumentType)
+    on_load=RepoState.event_on_page_load, # trunk-ignore(pyright/reportArgumentType)
 )
