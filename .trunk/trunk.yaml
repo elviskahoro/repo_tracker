@@ -13,8 +13,8 @@ plugins:
       uri: https://github.com/trunk-io/plugins
 
     - id: oss-linter-trunk
-      ref: v0.2024.11.03.12.02
-      uri: https://github.com/reflex-dev/oss-linter-trunk
+      ref: v0.2024.11.20.21.37
+      uri: https://github.com/elviskahoro/oss-linter-trunk
 
 # Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
 runtimes:
